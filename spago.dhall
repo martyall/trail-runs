@@ -1,0 +1,33 @@
+{ name = "my-project"
+, dependencies =
+  [ "aff"
+  , "affjax"
+  , "affjax-web"
+  , "argonaut"
+  , "arrays"
+  , "console"
+  , "deck-gl"
+  , "effect"
+  , "either"
+  , "exceptions"
+  , "foldable-traversable"
+  , "foreign-object"
+  , "integers"
+  , "maybe"
+  , "newtype"
+  , "numbers"
+  , "ordered-collections"
+  , "partial"
+  , "prelude"
+  , "react"
+  , "react-dom"
+  , "react-map-gl"
+  , "transformers"
+  , "tuples"
+  , "web-dom"
+  , "web-html"
+  , "web-mercator"
+  ]
+, packages = ./packages.dhall
+, sources = [ "purs/src/**/*.purs" ]
+}
