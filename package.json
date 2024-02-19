@@ -15,6 +15,7 @@
     "@luma.gl/core": "^8.3.1",
     "@luma.gl/engine": "^8.3.1",
     "@luma.gl/webgl": "^8.3.1",
+    "@deck.gl/layers": "^8.3.1",
     "deck.gl": "^8.9.34",
     "rbush": "^3.0.1",
     "react": "^18.2.0",

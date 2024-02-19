@@ -1,6 +1,7 @@
 module App.Request
   ( buildIconMapping
   , getMeteoriteData
+  , getRoute
   ) where
 
 import Prelude
@@ -11,11 +12,13 @@ import Affjax.ResponseFormat (json)
 import Affjax.Web (driver)
 import App.Data.Icon (IconEntry(..))
 import App.Data.Meteorite (Meteorite)
+import App.Data.Route (Route, parseRoute)
 import Data.Argonaut as A
 import Data.Array (foldl)
 import Data.Either (Either(..), either)
 import DeckGL.Layer.Icon as Icon
 import Effect.Aff (Aff, error, throwError)
+import Effect.Class (liftEffect)
 import Foreign.Object as Object
 
 -- | Make a request to the data directory to make the `IconMapping`, which is just a mapping
@@ -61,3 +64,23 @@ getMeteoriteData = do
   -- | data directory urls.
   meteoritesUrl :: String
   meteoritesUrl = "data/meteorites.json"
+
+getRoute :: Aff Route
+getRoute = do
+  let
+    req = Affjax.defaultRequest
+      { url = routeUrl
+      , headers =
+          [ RequestHeader "Access-Control-Allow-Origin" "*"
+          , RequestHeader "Contenty-Type" "application/json"
+          ]
+      , responseFormat = json
+      }
+  resp <- Affjax.request driver req
+  case resp of
+    Left e -> throwError <<< error $ Affjax.printError e
+    Right { body } -> liftEffect $ parseRoute body
+  where
+  -- | data directory urls.
+  routeUrl :: String
+  routeUrl = "data/route.json"

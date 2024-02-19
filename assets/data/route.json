@@ -5427,21 +5427,6 @@
                     ]
                 ]
             }
-        },
-        {
-            "type": "Feature",
-            "properties": {
-                "name": "LAP001",
-                "cmt": "LAP001",
-                "desc": "LAP001"
-            },
-            "geometry": {
-                "type": "Point",
-                "coordinates": [
-                    -122.602543607,
-                    42.074565673
-                ]
-            }
         }
     ]
 }
