@@ -3,7 +3,6 @@ module App.Layer.Trip where
 import Prelude
 
 import App.Data.Route (Route(..))
-import Data.Array.Partial (head)
 import Data.Basic.Coordinates (Coordinates(..))
 import Data.DateTime.Instant (unInstant)
 import Data.DateTime.Instant as Instant
@@ -17,16 +16,16 @@ import Partial.Unsafe (unsafePartial)
 import WebMercator.LngLat (LngLat)
 import WebMercator.LngLat as LngLat
 
-mkTripsLayer :: forall p. { data :: Array TripR, time :: Number | p } -> Layer
-mkTripsLayer props =
+mkTripsLayer :: forall r. { data :: Array Trip, time :: Number | r } -> Layer
+mkTripsLayer { data: d, time } =
   Trips.makeTripsLayer
     $
       ( Trips.defaultTripsProps
           { id = "trip-layer"
-          , data = props.data
+          , data = (\(Trip t) -> t) <$> d
           , getPath = _.path
           , getTimestamps = _.timestamps
-          , currentTime = props.time
+          , currentTime = time
           , opacity = 0.9
           , getColor = const fallbackColor
           , trailLength = 0.05

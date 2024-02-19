@@ -4,23 +4,23 @@ module App.Component.Map
 
 import Prelude
 
-import App.Component.DeckGL (deckGLClass)
-import App.Layer.Trip (TripR, mkTripR)
+import App.Component.DeckGL as DeckGL
+import App.Layer.Trip (Trip(..), mkTripR)
 import App.Request (getRoute)
-import Control.Monad.Rec.Class (forever)
 import Data.Array (head)
-import Data.Int (floor, toNumber)
-import Data.Maybe (Maybe(..))
-import Data.Number (pow, (%))
-import Data.Tuple (Tuple(..))
+import Data.Foldable (for_)
+import Data.Int (toNumber)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Effect (Effect)
-import Effect.Aff (Milliseconds(..), delay, launchAff_)
+import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
-import Effect.Class.Console as Console
 import Effect.Uncurried (mkEffectFn1)
 import MapGL as MapGL
 import React as R
+import Web.Event.Event as WE
+import Web.Event.EventTarget as WET
 import Web.HTML (window)
+import Web.HTML.Window as WH.Window
 import Web.HTML.Window as Window
 import WebMercator.LngLat as LngLat
 import WebMercator.Viewport (ViewportR)
@@ -44,41 +44,23 @@ mapClass = R.component "Map" \this -> do
         Nothing -> vp
         Just s -> vp { latitude = LngLat.lat s, longitude = LngLat.lng s, zoom = 13.0 }
     liftEffect $ R.modifyState this _
-      { data = [ route ]
+      { data = [ Trip route ]
       , viewport = MapGL.Viewport vp'
       }
 
   pure
     { render: render this
-    , componentDidMount: componentDidMount this
     , state:
         { viewport: MapGL.Viewport vp
-        , data: []
-        , time: 0.0
-        , currentSpeedFactor: 0.75
+        , data: ([] :: Array Trip)
         }
+    , componentDidMount: componentDidMount this
     }
   where
-  componentDidMount this = do
-
-    launchAff_
-      $ forever do
-          currentSpeedFactor <- liftEffect do
-            st <- R.getState this
-            pure $ st.currentSpeedFactor `pow` 2.0
-          delay $ Milliseconds 50.0
-          liftEffect $ R.modifyState this $ \st ->
-            let
-              newTime = (st.time + 0.005 * currentSpeedFactor) % 1.1 -- not using 1.0 here because we want some time for fadeout
-            in
-              st { time = newTime }
-
   render this = do
     state <- R.getState this
     let
-      viewport@(MapGL.Viewport vp) = state.viewport
-      -- relevantMeteorites = getMeteoritesInBoundingBox vp state.data
-
+      viewport = state.viewport
       mapProps = MapGL.mkProps viewport $
         { onViewportChange: mkEffectFn1 \newVp -> void $ R.modifyState this _ { viewport = newVp }
         , onClick: mkEffectFn1 (const $ pure unit)
@@ -89,23 +71,21 @@ mapClass = R.component "Map" \this -> do
         , touchZoom: false
         , touchRotate: false
         }
-
       overlayProps =
         { viewport
         , data: state.data
-        , discreteZoom: floor vp.zoom
-        , time: state.time
         }
-    pure $ R.createElement MapGL.mapGL mapProps [ R.createLeafElement deckGLClass overlayProps ]
+    pure $ R.createElement MapGL.mapGL mapProps [ R.createLeafElement DeckGL.component overlayProps ]
 
---getMeteoritesInBoundingBox :: Record (ViewportR ()) -> Array Meteorite -> Array Meteorite
---getMeteoritesInBoundingBox vp = filter
---  $ Viewport.isInBoundingBox (Viewport.boundingBox $ Viewport.pack vp) <<< meteoriteLngLat
-
-type MapState =
-  { viewport :: MapGL.Viewport
-  , data :: Array TripR
-  }
+  componentDidMount this = do
+    windowTarget <- WH.Window.toEventTarget <$> window
+    let eventType = WE.EventType "resize"
+    listener <- WET.eventListener $ \e ->
+      for_ (WH.Window.fromEventTarget =<< WE.target e) $ \win -> do
+        width <- toNumber <$> Window.innerWidth win
+        height <- toNumber <$> Window.innerHeight win
+        R.modifyState this $ \state -> { data: state.data, viewport: applyViewportDimensions { width, height } state.viewport }
+    WET.addEventListener eventType listener true windowTarget
 
 mapStyle :: String
 mapStyle = "mapbox://styles/mapbox/dark-v9"
@@ -127,3 +107,43 @@ initialViewport = do
     , pitch: 0.0
     , bearing: 0.0
     }
+
+--------------------------------------------------------------------------------
+
+type ViewportDimensions = { width :: Number, height :: Number }
+type ViewportChanges =
+  { latitude :: Maybe Number
+  , longitude :: Maybe Number
+  , zoom :: Maybe Number
+  , pitch :: Maybe Number
+  , bearing :: Maybe Number
+  }
+
+defViewportChanges :: ViewportChanges
+defViewportChanges =
+  { latitude: Nothing
+  , longitude: Nothing
+  , zoom: Nothing
+  , pitch: Nothing
+  , bearing: Nothing
+  }
+
+applyViewportDimensions
+  :: ViewportDimensions
+  -> MapGL.Viewport
+  -> MapGL.Viewport
+applyViewportDimensions { width: vdWidth, height: vdHeight } (MapGL.Viewport vp) =
+  MapGL.Viewport $ vp { width = vdWidth, height = vdHeight }
+
+applyViewportChanges
+  :: ViewportChanges
+  -> MapGL.Viewport
+  -> MapGL.Viewport
+applyViewportChanges changes (MapGL.Viewport vp) = MapGL.Viewport vp'
+  where
+  vp' = vp { latitude = lat', longitude = lon', zoom = zoom', pitch = pitch', bearing = bearing' }
+  lat' = fromMaybe vp.latitude changes.latitude
+  lon' = fromMaybe vp.longitude changes.longitude
+  zoom' = fromMaybe vp.zoom changes.zoom
+  pitch' = fromMaybe vp.pitch changes.pitch
+  bearing' = fromMaybe vp.bearing changes.bearing
