@@ -12,6 +12,7 @@
   , "exceptions"
   , "foldable-traversable"
   , "foreign-object"
+  , "geojson"
   , "integers"
   , "maybe"
   , "newtype"
