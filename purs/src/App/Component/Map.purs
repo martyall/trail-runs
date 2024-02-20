@@ -10,7 +10,7 @@ import App.Request (getRoute)
 import Data.Array (head)
 import Data.Foldable (for_)
 import Data.Int (toNumber)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
@@ -42,7 +42,7 @@ mapClass = R.component "Map" \this -> do
     let
       vp' = case start of
         Nothing -> vp
-        Just s -> vp { latitude = LngLat.lat s, longitude = LngLat.lng s, zoom = 13.0 }
+        Just s -> vp { latitude = LngLat.lat s, longitude = LngLat.lng s, zoom = 17.0 }
     liftEffect $ R.modifyState this _
       { data = [ Trip route ]
       , viewport = MapGL.Viewport vp'
@@ -66,10 +66,10 @@ mapClass = R.component "Map" \this -> do
         , onClick: mkEffectFn1 (const $ pure unit)
         , mapStyle: mapStyle
         , mapboxApiAccessToken: mapboxApiAccessToken
-        , dragRotate: false
+        , dragRotate: true
         , onLoad: mempty
-        , touchZoom: false
-        , touchRotate: false
+        , touchZoom: true
+        , touchRotate: true
         }
       overlayProps =
         { viewport
@@ -119,15 +119,6 @@ type ViewportChanges =
   , bearing :: Maybe Number
   }
 
-defViewportChanges :: ViewportChanges
-defViewportChanges =
-  { latitude: Nothing
-  , longitude: Nothing
-  , zoom: Nothing
-  , pitch: Nothing
-  , bearing: Nothing
-  }
-
 applyViewportDimensions
   :: ViewportDimensions
   -> MapGL.Viewport
@@ -135,6 +126,7 @@ applyViewportDimensions
 applyViewportDimensions { width: vdWidth, height: vdHeight } (MapGL.Viewport vp) =
   MapGL.Viewport $ vp { width = vdWidth, height = vdHeight }
 
+{-
 applyViewportChanges
   :: ViewportChanges
   -> MapGL.Viewport
@@ -147,3 +139,13 @@ applyViewportChanges changes (MapGL.Viewport vp) = MapGL.Viewport vp'
   zoom' = fromMaybe vp.zoom changes.zoom
   pitch' = fromMaybe vp.pitch changes.pitch
   bearing' = fromMaybe vp.bearing changes.bearing
+
+defViewportChanges :: ViewportChanges
+defViewportChanges =
+  { latitude: Nothing
+  , longitude: Nothing
+  , zoom: Nothing
+  , pitch: Nothing
+  , bearing: Nothing
+  }
+-}

@@ -4,8 +4,7 @@ import Prelude
 
 import DeckGL (Layer)
 import DeckGL.Layers.Terrain (defaultTerrainProps, makeTerrainLayer)
-import WebMercator.LngLat (lat, lng)
-import WebMercator.Viewport (Viewport, boundingBox)
+import WebMercator.Viewport (Viewport)
 
 mkTerrainLayer
   :: forall r
@@ -13,15 +12,12 @@ mkTerrainLayer
      | r
      }
   -> Layer
-mkTerrainLayer { viewport } =
+mkTerrainLayer _ =
   makeTerrainLayer
     $
       ( defaultTerrainProps
-          { bounds =
-              let
-                { sw, ne } = boundingBox viewport
-              in
-                [ lng sw, lat sw, lng ne, lat ne ]
+          { id = "terrain"
+          , visible = true
           , elevationData = terrainImageUrl
           , texture = surfaceImageUrl
           , elevationDecoder =
@@ -32,14 +28,17 @@ mkTerrainLayer { viewport } =
               }
           , wireframe = false
           , color = [ 255, 255, 255 ]
+          , operation = "terrain"
+          , strategy = "no-overlap"
+          , minZoom = 10
           }
       )
 
-mapTilerKey :: String
-mapTilerKey = "tj1wb0snXj90DYL73Dlp"
-
 terrainImageUrl :: String
-terrainImageUrl = "https://api.maptiler.com/tiles/terrain-rgb-v2/{z}/{x}/{y}.webp?key=" <> mapTilerKey
+terrainImageUrl = "https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.png?access_token=" <> mapboxApiAccessToken
 
 surfaceImageUrl :: String
-surfaceImageUrl = "https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=" <> mapTilerKey
+surfaceImageUrl = "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.png?access_token=" <> mapboxApiAccessToken
+
+mapboxApiAccessToken :: String
+mapboxApiAccessToken = "pk.eyJ1IjoiYmxpbmt5MzcxMyIsImEiOiJjamVvcXZtbGYwMXgzMzNwN2JlNGhuMHduIn0.ue2IR6wHG8b9eUoSfPhTuQ"

@@ -2,20 +2,17 @@ module App.Component.DeckGL (component) where
 
 import Prelude
 
-import App.Layer.Terrain (mkTerrainLayer)
 import App.Layer.Trip (Trip, mkTripsLayer)
 import Control.Monad.Rec.Class (forever)
 import Data.Array (cons)
 import Data.Foldable (traverse_)
-import Data.Newtype (un, unwrap)
+import Data.Newtype (unwrap)
 import Data.Number (pow, (%))
 import DeckGL as DeckGL
 import Effect.Aff (Fiber, Milliseconds(..), delay, error, killFiber, launchAff, launchAff_)
 import Effect.Class (liftEffect)
-import MapGL (Viewport(..))
 import MapGL as MapGL
 import React as R
-import WebMercator.Viewport (pack)
 
 type Props =
   { viewport :: MapGL.Viewport
@@ -44,14 +41,11 @@ component = R.component "deck-gl" \this -> do
     state <- R.getState this
     let
       tripsLayer = mkTripsLayer { data: props.data, time: state.time }
-      terrainLayer = mkTerrainLayer { viewport: pack $ un Viewport props.viewport }
 
     pure
       $ R.createLeafElement DeckGL.deckGL
-      $ DeckGL.defaultDeckGLProps { layers = [ tripsLayer, terrainLayer ], viewState = unwrap props.viewport }
-
+      $ DeckGL.defaultDeckGLProps { layers = [ tripsLayer ], viewState = unwrap props.viewport, controller = true }
   componentDidMount this = do
-
     thread <- launchAff
       $ forever do
           let currentSpeedFactor = 0.5 `pow` 2.0

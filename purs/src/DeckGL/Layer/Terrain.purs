@@ -10,11 +10,14 @@ foreign import makeTerrainLayer :: forall d. TerrainLayerProps d -> Layer
 type TerrainData d = { | d }
 
 type TerrainLayerProps d = BaseProps
-  ( elevationData :: String
+  ( strategy :: String
+  , operation :: String
+  , elevationData :: String
   , elevationDecoder :: ElevationDecoder
   , texture :: String
   , bounds :: Array Number
   , wireframe :: Boolean
+  , minZoom :: Int
   , color :: Array Int
   )
   (TerrainData d)
