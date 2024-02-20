@@ -21,7 +21,10 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-map-gl": "^6.1.0",
-    "xhr2": "^0.2.0"
+    "xhr2": "^0.2.0",
+    "@luma.gl/core": "^8.3.1",
+    "@luma.gl/engine": "^8.3.1",
+    "@luma.gl/webgl": "^8.3.1"
   },
   "devDependencies": {
     "esbuild": "^0.14.49",

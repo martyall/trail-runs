@@ -17,7 +17,9 @@ import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.Window as Window
 
 main :: Effect Unit
-main = void $ elm' >>= render (R.createLeafElement mapClass {})
+main = do
+  enableLogging
+  void $ elm' >>= render (R.createLeafElement mapClass {})
   where
   elm' :: Effect Element
   elm' = do
@@ -25,3 +27,5 @@ main = void $ elm' >>= render (R.createLeafElement mapClass {})
     doc <- Window.document win
     elm <- getElementById "root" (HTMLDocument.toNonElementParentNode doc)
     pure $ unsafePartial (fromJust elm)
+
+foreign import enableLogging :: Effect Unit

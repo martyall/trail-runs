@@ -31,6 +31,7 @@ mkTerrainLayer _ =
           , operation = "terrain"
           , strategy = "no-overlap"
           , minZoom = 10
+          , opacity = 0.9
           }
       )
 

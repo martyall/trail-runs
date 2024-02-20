@@ -5,12 +5,11 @@ module App.Component.Map
 import Prelude
 
 import App.Component.DeckGL as DeckGL
-import App.Layer.Trip (Trip(..), mkTripR)
+import App.Data.Route (Route)
 import App.Request (getRoute)
-import Data.Array (head)
 import Data.Foldable (for_)
 import Data.Int (toNumber)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
@@ -22,7 +21,6 @@ import Web.Event.EventTarget as WET
 import Web.HTML (window)
 import Web.HTML.Window as WH.Window
 import Web.HTML.Window as Window
-import WebMercator.LngLat as LngLat
 import WebMercator.Viewport (ViewportR)
 
 --------------------------------------------------------------------------------
@@ -34,25 +32,16 @@ mapClass = R.component "Map" \this -> do
   vp <- initialViewport
   launchAff_ do
     r <- getRoute
-    let route = mkTripR r
-    let
-      start :: Maybe (LngLat.LngLat)
-      start = head route.path
-
-    let
-      vp' = case start of
-        Nothing -> vp
-        Just s -> vp { latitude = LngLat.lat s, longitude = LngLat.lng s, zoom = 17.0 }
     liftEffect $ R.modifyState this _
-      { data = [ Trip route ]
-      , viewport = MapGL.Viewport vp'
+      { data = [ r ]
+      , viewport = MapGL.Viewport vp
       }
 
   pure
     { render: render this
     , state:
         { viewport: MapGL.Viewport vp
-        , data: ([] :: Array Trip)
+        , data: ([] :: Array Route)
         }
     , componentDidMount: componentDidMount this
     }
@@ -101,9 +90,9 @@ initialViewport = do
   pure
     { width: toNumber w
     , height: toNumber h
-    , longitude: -35.0
-    , latitude: 36.7
-    , zoom: 1.8
+    , longitude: -122.7095
+    , latitude: 42.1946
+    , zoom: 15.0
     , pitch: 0.0
     , bearing: 0.0
     }

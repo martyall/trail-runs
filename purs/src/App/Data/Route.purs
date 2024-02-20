@@ -5,7 +5,8 @@ import Prelude
 import Control.Monad.Except (except, runExceptT, throwError)
 import Control.Monad.Trans.Class (lift)
 import Data.Argonaut (Json, decodeJson, printJsonDecodeError, (.:))
-import Data.Array (concat, foldMap, head)
+import Data.Array (concat, foldMap, head, zipWith)
+import Data.Array.Partial (tail)
 import Data.Basic.Coordinates (Coordinates)
 import Data.Basic.LineStringCoordinates (toArray)
 import Data.DateTime (DateTime)
@@ -14,12 +15,13 @@ import Data.FeatureCollection (FeatureCollection(..))
 import Data.Geometry (Geometry(..))
 import Data.Geometry.Feature (Feature(..), FeatureProperties(..))
 import Data.JSDate as JSDate
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromJust)
 import Data.MultiLineString (MultiLineString(..))
 import Data.Profunctor.Choice (left)
 import Data.Traversable (traverse)
 import Effect (Effect)
 import Effect.Exception (throw)
+import Partial.Unsafe (unsafePartial)
 
 -- import Date.DateTime.ISO (ISO)
 
@@ -63,3 +65,10 @@ parseCoordinates (Feature { geometry }) =
   case geometry of
     MultiLineString' (MultiLineString { coordinates }) -> pure $ foldMap toArray coordinates
     _ -> throwError "Feature geometry is not a MultiLineString"
+
+newtype Segment = Segment
+  { source :: Coordinates, target :: Coordinates }
+
+segmentRoute :: Route -> Array Segment
+segmentRoute (Route { points }) =
+  zipWith (\source target -> Segment { source, target }) points (unsafePartial tail points)

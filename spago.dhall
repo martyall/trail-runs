@@ -6,6 +6,7 @@
   , "argonaut"
   , "arrays"
   , "datetime"
+  , "debug"
   , "deck-gl"
   , "effect"
   , "either"
